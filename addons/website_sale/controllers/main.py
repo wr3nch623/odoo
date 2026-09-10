@@ -836,7 +836,14 @@ class WebsiteSale(payment_portal.PaymentPortal):
                             and ptav.product_attribute_value_id.id in attribute_value_ids
                         )
                     )[:1]
-                ) or ptal.product_template_value_ids.filtered('ptav_active')[:1]
+                )
+                or (
+                    ptal.product_template_value_ids.filtered(
+                        lambda ptav: (
+                            ptav.ptav_active and ptal.attribute_id.display_type != "multi"
+                        )
+                    )[:1]
+                )
             )
             combination_info = product._get_combination_info(
                 combination=request.env['product.template.attribute.value'].concat(combination)
@@ -1888,7 +1895,7 @@ class WebsiteSale(payment_portal.PaymentPortal):
         for line in order_lines.filtered(lambda line: not line.is_delivery):
             product = line.product_id
             ret.append({
-                'item_id': product.barcode or product.id,
+                'item_id': product.default_code or product.id,
                 'item_name': product.name or '-',
                 'item_category': product.categ_id.name or '-',
                 'price': line.price_unit,
